@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f5f7f4" />
+  <title>CivicEase — Public service appointments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home" aria-label="CivicEase home"><span class="brand-mark">c</span><span>Civic<span class="brand-light">Ease</span></span></a>
+    <nav aria-label="Main navigation"><a href="#services">Services</a><a href="#how-it-works">How it works</a></nav>
+    <button class="my-bookings" id="openBookings"><span class="calendar-icon">▦</span> My appointments <span class="count" id="bookingCount">0</span></button>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <div class="hero-copy"><div class="eyebrow"><span class="live-dot"></span> YOUR CITY, MADE SIMPLER</div>
+        <h1>Public services,<br><em>without the wait.</em></h1>
+        <p>Book the help you need in just a few clicks. Pick a service, choose a time, and you’re all set.</p>
+        <a class="primary-button hero-cta" href="#services">Find a service <span>↗</span></a>
+        <div class="hero-proof"><div class="avatar-stack"><i>R</i><i>A</i><i>M</i><i>+</i></div><span><b>Easy to book.</b> One less thing to worry about.</span></div>
+      </div>
+      <div class="hero-art" aria-label="Illustration of a person checking an appointment"><div class="sun"></div><div class="art-card"><div class="art-card-head"><span class="tiny-mark">c</span><span>YOUR APPOINTMENT</span><span class="art-check">✓</span></div><div class="art-line"></div><div class="appointment-date"><span class="date-box"><b>18</b><small>JUN</small></span><span><b>Document services</b><small>Tuesday · 10:30 AM</small></span></div><div class="art-line short"></div><div class="art-footer"><span>Central Service Centre</span><span>→</span></div></div><div class="person"><div class="person-hair"></div><div class="person-head"></div><div class="person-neck"></div><div class="person-body"></div><div class="person-arm"></div></div><div class="plant"><i></i><i></i><i></i><b></b></div><div class="ground"></div><div class="sparkle one">✳</div><div class="sparkle two">✳</div></div>
+    </section>
+
+    <section class="service-section" id="services">
+      <div class="section-heading"><div><div class="eyebrow">START HERE</div><h2>What can we help with?</h2><p>Choose a service to see what you’ll need and find a time that works.</p></div><div class="service-search"><span>⌕</span><input id="serviceSearch" type="search" placeholder="Search services" aria-label="Search services" /></div></div>
+      <div class="service-grid" id="serviceGrid"></div>
+      <div class="no-results" id="noResults" hidden>No services match that search. Try another word.</div>
+    </section>
+
+    <section class="how-section" id="how-it-works"><div class="how-title"><div class="eyebrow">A LITTLE LESS PAPERWORK</div><h2>Three steps. <em>You’re booked.</em></h2></div><div class="steps"><article><span class="step-no">01</span><div class="step-icon">⌕</div><h3>Choose a service</h3><p>Find the right service and check what documents to bring.</p></article><article><span class="step-no">02</span><div class="step-icon">▦</div><h3>Pick a time</h3><p>Browse available slots and choose the one that fits your day.</p></article><article><span class="step-no">03</span><div class="step-icon">✓</div><h3>Show up ready</h3><p>Get a booking reference and arrive with everything you need.</p></article></div></section>
+    <section class="help-banner"><div class="help-icon">✳</div><div><span class="eyebrow">NEED A QUICK ANSWER?</span><h2>Not sure what to bring?</h2><p>Ask our assistant about services, documents, or appointments.</p></div><button class="outline-button" id="openAssistant">Ask the assistant <span>↗</span></button></section>
+  </main>
+
+  <footer><a class="brand footer-brand" href="#home"><span class="brand-mark">c</span><span>Civic<span class="brand-light">Ease</span></span></a><span>A student project prototype · Service information is sample content</span><a href="#services">Explore services ↑</a></footer>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="close-modal" id="closeModal" aria-label="Close">×</button><div id="modalContent"></div></section></div>
+  <aside class="assistant-panel" id="assistantPanel" aria-label="CivicEase assistant" aria-hidden="true"><div class="assistant-head"><div class="assistant-avatar">✳</div><div><b>CivicEase assistant</b><small><span class="live-dot"></span> Here to help</small></div><button id="closeAssistant" aria-label="Close assistant">×</button></div><div class="chat-messages" id="chatMessages"><div class="message bot">Hi there! Ask me about services, required documents, or how booking works. I’ll do my best to help.</div><div class="quick-questions"><button>What should I bring?</button><button>How do I reschedule?</button></div></div><form class="chat-form" id="chatForm"><input id="chatInput" placeholder="Ask a question…" autocomplete="off" aria-label="Ask the assistant"/><button aria-label="Send message">↑</button></form><div class="assistant-note">Answers use the sample information on this page.</div></aside>
+  <button class="assistant-fab" id="assistantFab" aria-label="Open assistant">✳<span>Ask us</span></button>
+  <script src="app.js"></script>
+</body>
+</html>
