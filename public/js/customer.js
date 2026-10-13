@@ -8,10 +8,8 @@ let chatHistory = [];
 
 const byId = (id) => document.getElementById(id);
 
-// Automatically route to backend if page is opened via file:// or different port (e.g. Live Server)
-const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000'))
-  ? 'http://localhost:3000'
-  : '';
+// Automatically route to backend if page is opened via file://; otherwise use relative /api
+const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
 
 const dayOffset = (n) => {
   const d = new Date();

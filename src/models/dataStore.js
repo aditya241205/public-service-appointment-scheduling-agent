@@ -184,9 +184,14 @@ class DataStore {
         bookings: this.bookings,
         blockedSlots: this.blockedSlots
       };
+      const dir = path.dirname(config.dataPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
       fs.writeFileSync(config.dataPath, JSON.stringify(data, null, 2), 'utf8');
     } catch (err) {
-      console.error('Error saving data store:', err);
+      // Gracefully fall back to in-memory state on read-only serverless filesystems
+      console.warn('DataStore save warning (fallback to in-memory):', err.message);
     }
   }
 

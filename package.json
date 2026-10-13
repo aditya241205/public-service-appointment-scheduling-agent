@@ -2,7 +2,7 @@
   "name": "yadav-flexi",
   "version": "1.0.0",
   "description": "A browser-based college project prototype for finding and booking public service appointments.",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
