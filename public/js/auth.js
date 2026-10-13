@@ -1,5 +1,7 @@
 // CivicEase JWT Authentication Client Module
-const AUTH_API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+const AUTH_API_BASE = (window.location.protocol === 'file:' || (window.location.hostname === 'localhost' && window.location.port !== '3000') || (window.location.hostname === '127.0.0.1' && window.location.port !== '3000'))
+  ? 'http://localhost:3000'
+  : '';
 
 function getAuthToken() {
   return localStorage.getItem('civicease_jwt') || null;
