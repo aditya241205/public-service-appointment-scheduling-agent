@@ -130,12 +130,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (data.success) {
         if (data.actionsTaken && data.actionsTaken.length > 0) {
           data.actionsTaken.forEach(action => {
-            const badge = document.createElement('div');
+            const badge = document.createElement('details');
             badge.className = 'agent-action-badge';
-            const detailStr = JSON.stringify(action.arguments || {});
+            badge.style.cursor = 'pointer';
+            const detailStr = JSON.stringify(action.arguments || {}, null, 2);
             badge.innerHTML = `
-              <div class="badge-title">[Operations Action] Autonomous Tool: <code>${escapeText(action.tool)}</code></div>
-              <div class="badge-detail">Args: ${escapeText(detailStr)}</div>
+              <summary class="badge-title" style="cursor:pointer;outline:none;">
+                <span>Operations Action: <code>${escapeText(action.tool)}</code></span>
+                <span style="font-size:9px;color:#4c745d;margin-left:auto;font-weight:normal;">[View Details]</span>
+              </summary>
+              <pre class="badge-detail" style="margin:6px 0 0;white-space:pre-wrap;font-size:10px;">${escapeText(detailStr)}</pre>
             `;
             byId('officerChatMessages').append(badge);
           });
@@ -432,10 +436,53 @@ function closeOfficerModal() {
   byId('officerModalBackdrop').hidden = true;
 }
 
+function formatOfficerChatMessage(text) {
+  if (!text) return '';
+  let escaped = escapeText(text);
+
+  // Bold text: **text** -> <strong>text</strong>
+  escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Highlight reference codes: CE-XXXXXX
+  escaped = escaped.replace(/\b(CE-[A-Z0-9]{4,8})\b/g, '<strong style="background:#e0ede1;color:#184a2d;padding:2px 6px;border-radius:4px;letter-spacing:0.5px;">$1</strong>');
+
+  const lines = escaped.split('\n');
+  let inList = false;
+  let formatted = '';
+
+  for (let line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      if (!inList) {
+        formatted += '<ul style="margin:6px 0 6px 18px;padding:0;list-style:disc;">';
+        inList = true;
+      }
+      formatted += `<li style="margin-bottom:3px;">${trimmed.substring(2)}</li>`;
+    } else {
+      if (inList) {
+        formatted += '</ul>';
+        inList = false;
+      }
+      if (trimmed === '') {
+        formatted += '<div style="height:6px;"></div>';
+      } else {
+        formatted += `<div style="margin-bottom:3px;">${line}</div>`;
+      }
+    }
+  }
+  if (inList) formatted += '</ul>';
+
+  return formatted;
+}
+
 function addOfficerChatMessage(text, who) {
   const el = document.createElement('div');
   el.className = `message ${who}`;
-  el.textContent = text;
+  if (who === 'bot') {
+    el.innerHTML = formatOfficerChatMessage(text);
+  } else {
+    el.textContent = text;
+  }
   byId('officerChatMessages').append(el);
   byId('officerChatMessages').scrollTop = byId('officerChatMessages').scrollHeight;
 }
