@@ -1,3 +1,4 @@
+const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000')) ? 'http://localhost:3000' : '';
 let servicesList = [];
 let officerChatHistory = [];
 
@@ -83,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     byId('officerChatMessages').scrollTop = byId('officerChatMessages').scrollHeight;
 
     try {
-      const res = await fetch('/api/agent/chat', {
+      const res = await fetch(`${API_BASE}/api/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -137,7 +138,7 @@ function debounce(fn, delay) {
 
 async function loadServices() {
   try {
-    const res = await fetch('/api/services');
+    const res = await fetch(`${API_BASE}/api/services`);
     const data = await res.json();
     if (data.success) {
       servicesList = data.services;
@@ -160,7 +161,7 @@ async function loadServices() {
 
 async function loadAnalytics() {
   try {
-    const res = await fetch('/api/analytics');
+    const res = await fetch(`${API_BASE}/api/analytics`);
     const data = await res.json();
     if (data.success && data.analytics) {
       const a = data.analytics;
@@ -188,7 +189,7 @@ async function loadBookings() {
   if (query) params.append('query', query);
 
   try {
-    const res = await fetch(`/api/bookings?${params.toString()}`);
+    const res = await fetch(`${API_BASE}/api/bookings?${params.toString()}`);
     const data = await res.json();
 
     if (!data.success || !data.bookings || data.bookings.length === 0) {
@@ -238,7 +239,7 @@ async function loadSlotMatrix() {
   container.innerHTML = '<div style="grid-column:1/-1;font-size:12px;color:#7a8a80;">Loading slot matrix...</div>';
 
   try {
-    const res = await fetch(`/api/services/${serviceId}/slots?date=${date}`);
+    const res = await fetch(`${API_BASE}/api/services/${serviceId}/slots?date=${date}`);
     const data = await res.json();
 
     if (!data.success || !data.slots) {
@@ -271,7 +272,7 @@ async function loadSlotMatrix() {
 
 window.toggleSlotBlock = async function (serviceId, date, time, action) {
   try {
-    const res = await fetch('/api/slots/toggle', {
+    const res = await fetch(`${API_BASE}/api/slots/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ serviceId, date, time, action })
@@ -293,7 +294,7 @@ window.officerCancelBooking = async function (ref) {
   if (reason === null) return;
 
   try {
-    const res = await fetch(`/api/bookings/${ref}`, {
+    const res = await fetch(`${API_BASE}/api/bookings/${ref}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason })
@@ -345,7 +346,7 @@ window.openOfficerRescheduleModal = async function (ref, serviceId) {
     if (!d) return;
     slotsDiv.innerHTML = 'Loading slots...';
     try {
-      const res = await fetch(`/api/services/${serviceId}/slots?date=${d}`);
+      const res = await fetch(`${API_BASE}/api/services/${serviceId}/slots?date=${d}`);
       const data = await res.json();
       if (data.success && data.slots) {
         slotsDiv.innerHTML = data.slots.map(s => `
@@ -374,7 +375,7 @@ window.openOfficerRescheduleModal = async function (ref, serviceId) {
   confirmBtn.addEventListener('click', async () => {
     if (!chosenSlot) return;
     try {
-      const res = await fetch(`/api/bookings/${ref}/reschedule`, {
+      const res = await fetch(`${API_BASE}/api/bookings/${ref}/reschedule`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

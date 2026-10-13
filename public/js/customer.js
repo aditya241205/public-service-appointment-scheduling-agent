@@ -8,6 +8,11 @@ let chatHistory = [];
 
 const byId = (id) => document.getElementById(id);
 
+// Automatically route to backend if page is opened via file:// or different port (e.g. Live Server)
+const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000'))
+  ? 'http://localhost:3000'
+  : '';
+
 const dayOffset = (n) => {
   const d = new Date();
   d.setDate(d.getDate() + n);
@@ -56,7 +61,7 @@ async function updateCount() {
 // Fetch services from backend
 async function fetchServices() {
   try {
-    const res = await fetch('/api/services');
+    const res = await fetch(`${API_BASE}/api/services`);
     const data = await res.json();
     if (data.success) {
       services = data.services;
@@ -148,7 +153,7 @@ async function loadSlotGrid(serviceId, dateYmd) {
   container.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#77857c;">Checking slots...</div>';
 
   try {
-    const res = await fetch(`/api/services/${serviceId}/slots?date=${dateYmd}`);
+    const res = await fetch(`${API_BASE}/api/services/${serviceId}/slots?date=${dateYmd}`);
     const data = await res.json();
     if (!data.success || !data.slots) {
       container.innerHTML = `<div style="grid-column:1/-1;color:#b03434;">Unable to load slots.</div>`;
@@ -196,7 +201,7 @@ async function openBookings() {
   const storedRefs = getStoredRefs();
 
   try {
-    const res = await fetch('/api/bookings');
+    const res = await fetch(`${API_BASE}/api/bookings`);
     const data = await res.json();
     let userBookings = [];
     if (data.success && data.bookings) {
@@ -284,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const ref = cancelBtn.dataset.cancel;
       if (confirm(`Cancel appointment ${ref}?`)) {
         try {
-          const res = await fetch(`/api/bookings/${ref}`, {
+          const res = await fetch(`${API_BASE}/api/bookings/${ref}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reason: 'Citizen cancelled from portal' })
@@ -323,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (rescheduleRef) {
       try {
-        const res = await fetch(`/api/bookings/${rescheduleRef}/reschedule`, {
+        const res = await fetch(`${API_BASE}/api/bookings/${rescheduleRef}/reschedule`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -354,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } else {
       try {
-        const res = await fetch('/api/bookings', {
+        const res = await fetch(`${API_BASE}/api/bookings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -426,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
     byId('chatMessages').scrollTop = byId('chatMessages').scrollHeight;
 
     try {
-      const res = await fetch('/api/agent/chat', {
+      const res = await fetch(`${API_BASE}/api/agent/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
