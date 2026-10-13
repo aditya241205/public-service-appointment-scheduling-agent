@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CivicEase - Officer & Retailer Operations Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="retailer-body">
+  <header class="topbar officer-topbar">
+    <div style="display:flex;align-items:center;">
+      <a class="brand" href="retailer.html" aria-label="CivicEase home">
+        <span class="brand-mark">c</span>
+        <span>Civic<span class="brand-light">Ease</span></span>
+      </a>
+      <span class="officer-badge">OPERATIONS PORTAL</span>
+    </div>
+    <div class="portal-switch">
+      <a href="index.html">Citizen Portal</a>
+      <a href="retailer.html" class="active">Officer / Retailer</a>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#5a6e62;" id="currentDateDisplay">
+      Today
+    </div>
+  </header>
+
+  <main class="dash-container">
+    <div class="dash-header">
+      <div>
+        <h1>Center Operations & Retailer Dashboard</h1>
+        <p>Monitor real-time citizen appointments, manage slot availability, and interact with the Operations AI Co-Pilot.</p>
+      </div>
+      <div class="dash-quick-actions">
+        <button class="primary-button" id="openOfficerChatBtn">
+          <span>Ask Operations Agent</span> <span>-&gt;</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STATS KPI CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Bookings</div>
+        <div class="stat-num" id="statTotalBookings">-</div>
+        <div class="stat-sub">Across all public services</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Appointments</div>
+        <div class="stat-num" id="statActiveBookings" style="color:#285b49;">-</div>
+        <div class="stat-sub">Confirmed & awaiting visit</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cancelled / Released</div>
+        <div class="stat-num" id="statCancelledBookings" style="color:#a83232;">-</div>
+        <div class="stat-sub">Slots returned to availability</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Blocked Slots</div>
+        <div class="stat-num" id="statBlockedSlots" style="color:#806b29;">-</div>
+        <div class="stat-sub">Administrative / maintenance blocks</div>
+      </div>
+    </div>
+
+    <!-- PANEL 1: LIVE APPOINTMENTS TABLE -->
+    <section class="dash-panel">
+      <div class="panel-head">
+        <h2>Live Citizen Appointments</h2>
+        <div class="filter-row">
+          <input type="date" id="filterDate" class="filter-input" aria-label="Filter by Date" />
+          <select id="filterService" class="filter-select">
+            <option value="">All Services</option>
+          </select>
+          <select id="filterStatus" class="filter-select">
+            <option value="">All Statuses</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <input type="search" id="filterSearch" class="filter-input" placeholder="Search citizen, ref, email..." />
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Reference ID</th>
+              <th>Citizen Details</th>
+              <th>Service Category</th>
+              <th>Appointment Date & Time</th>
+              <th>Status</th>
+              <th>Administrative Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTableBody">
+            <tr>
+              <td colspan="6" style="text-align:center;color:#7a8a80;padding:24px;">Loading appointment records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PANEL 2: SLOT AVAILABILITY & BLOCKING MATRIX -->
+    <section class="dash-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Slot Capacity & Availability Control</h2>
+          <p style="font-size:11px;color:#75857b;margin:4px 0 0;">Select a service and date to toggle slots (e.g. block slot for maintenance or officer meetings).</p>
+        </div>
+        <div class="filter-row">
+          <select id="slotMatrixService" class="filter-select"></select>
+          <input type="date" id="slotMatrixDate" class="filter-input" />
+        </div>
+      </div>
+
+      <div class="slot-manager-grid" id="slotManagerContainer">
+        <!-- Dynamically rendered slot items -->
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL FOR RESCHEDULE / ACTIONS -->
+  <div class="modal-backdrop" id="officerModalBackdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true">
+      <button class="close-modal" id="closeOfficerModal" aria-label="Close">x</button>
+      <div id="officerModalContent"></div>
+    </section>
+  </div>
+
+  <!-- OPERATIONS OFFICER AI AGENT DRAWER -->
+  <aside class="assistant-panel" id="officerAssistantPanel" aria-label="Operations Assistant" aria-hidden="true" style="width:min(420px, calc(100vw - 30px)); height:520px;">
+    <div class="assistant-head">
+      <div class="assistant-avatar" style="background:#d9e8dc;color:#285b49;">AI</div>
+      <div>
+        <b>CivicEase Operations Agent</b>
+        <small><span class="live-dot"></span> Groq Llama 3.3 Agentic Operations Co-Pilot</small>
+      </div>
+      <button id="closeOfficerAssistant" aria-label="Close assistant">x</button>
+    </div>
+    <div class="chat-messages" id="officerChatMessages">
+      <div class="message bot">
+        Hello Officer! I am your autonomous Operations Co-Pilot. I can query today's citizen schedule, block or re-open service slots, reschedule appointments, and provide center analytics. How can I assist you?
+      </div>
+      <div class="quick-questions">
+        <button>Summarize today's appointments</button>
+        <button>Show center operational analytics</button>
+        <button>Block 1:30 PM slot for Document Services tomorrow</button>
+        <button>List all cancelled bookings</button>
+      </div>
+    </div>
+    <form class="chat-form" id="officerChatForm">
+      <input id="officerChatInput" placeholder="Command the operations agent..." autocomplete="off" aria-label="Operations Agent Command" />
+      <button type="submit" aria-label="Send">^</button>
+    </form>
+    <div class="assistant-note">Equipped with real database tool-calling and slot control actions.</div>
+  </aside>
+
+  <button class="assistant-fab" id="officerAssistantFab" aria-label="Open Operations Assistant">
+    <span>Operations AI</span>
+  </button>
+
+  <script src="js/retailer.js"></script>
+</body>
+</html>

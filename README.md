@@ -1,70 +1,121 @@
-# CivicEase — Public Service Appointment Scheduling Agent
+# CivicEase - Autonomous Agentic AI Appointment Scheduling System
 
-A browser-based college project prototype for finding and booking public service appointments.
+An end-to-end **Agentic AI** appointment scheduling and operations platform powered by **Groq LLM function calling**. Designed for academic demonstrations in Agentic AI courses.
 
-## Run the prototype
+---
 
-Open `index.html` in a modern browser. No installation is needed. Bookings are saved in that browser with `localStorage`; clearing browser storage removes them. Confirmation is shown on screen, but the prototype does not send email or connect to a real government service.
+## Architecture Overview
 
-## Included in this first version
+The system features two dedicated portals backed by a secure Node.js + Express backend with autonomous tool calling:
 
-- Six searchable public-service categories, each with a description and sample document checklist.
-- Sample appointment dates and times, with a full slot shown as unavailable.
-- Appointment creation, rescheduling, cancellation, and booking references.
-- A conversational FAQ assistant that answers from the sample service information.
-- Responsive layout for phone and desktop screens.
-
-All service names, requirements, availability, opening hours, and office details are fictional sample data. Replace them with approved information before presenting the app as a real service.
-
-## Practical student-project stack
-
-Keep the current HTML, CSS, and JavaScript for the clickable UI. For a team that wants a more structured frontend, move it to React with Vite. Add Supabase for hosted PostgreSQL, authentication, and optional server functions. Put any AI provider key behind a server function; never put a private key in browser JavaScript. For a no-cost class demo, the current rule-based assistant is enough to demonstrate question answering without a key or network dependency.
-
-## Suggested database structure
-
-```sql
-create table services (
-  id text primary key,
-  name text not null,
-  description text not null,
-  requirements jsonb not null default '[]',
-  duration_minutes integer not null default 20,
-  active boolean not null default true
-);
-
-create table appointment_slots (
-  id uuid primary key default gen_random_uuid(),
-  service_id text not null references services(id),
-  starts_at timestamptz not null,
-  capacity integer not null default 1 check (capacity > 0),
-  booked_count integer not null default 0 check (booked_count >= 0),
-  unique (service_id, starts_at),
-  check (booked_count <= capacity)
-);
-
-create table appointments (
-  id uuid primary key default gen_random_uuid(),
-  reference text not null unique,
-  service_id text not null references services(id),
-  slot_id uuid not null references appointment_slots(id),
-  citizen_name text not null,
-  citizen_email text not null,
-  status text not null default 'confirmed'
-    check (status in ('confirmed', 'cancelled', 'completed')),
-  created_at timestamptz not null default now()
-);
+```
+.
+├── .env                             # Environment variables & Groq credentials
+├── .gitignore                       # Git ignore rules
+├── package.json                     # Dependencies & run scripts
+├── server.js                        # Application entry point
+├── public/                          # Frontend client assets
+│   ├── index.html                   # Citizen / Customer Portal UI
+│   ├── retailer.html                # Retailer / Operations Dashboard UI
+│   ├── css/
+│   │   └── styles.css               # Unified responsive design system
+│   └── js/
+│       ├── customer.js              # Citizen portal client script & AI drawer
+│       └── retailer.js              # Retailer operations script & AI co-pilot
+└── src/                             # Backend architecture & Agentic AI
+    ├── config/
+    │   └── config.js                # Environment config & IPv4 DNS enforcement
+    ├── models/
+    │   └── dataStore.js             # Data persistence (services, slots, bookings)
+    ├── data/
+    │   └── store.json               # JSON database file
+    ├── controllers/
+    │   ├── serviceController.js     # Service catalogue & slots endpoints
+    │   ├── bookingController.js     # Appointment bookings, reschedule & cancel
+    │   ├── slotController.js        # Slot blocking & center analytics
+    │   └── agentController.js       # Agentic AI chat routing
+    ├── routes/
+    │   └── api.js                   # REST API router
+    └── agents/
+        ├── agentEngine.js           # Groq LLM tool calling & multi-hop loop
+        ├── prompts.js               # Customer & Retailer system personas
+        └── tools/
+            ├── customerTools.js     # Citizen tools (book, reschedule, checklist)
+            └── retailerTools.js     # Retailer tools (schedule, block, analytics)
 ```
 
-In a real backend, reserve a slot in one database transaction so two users cannot take its last opening at once. Rescheduling should release the old slot and reserve the new one atomically. Add row-level access rules before storing personal details, and collect only the details the appointment actually needs.
+---
 
-## Build in small steps
+## The Two Portals
 
-1. **UI and interaction — done in this prototype.** Review the service list and replace the sample content with your chosen city or department.
-2. **Persistent database.** Create the three tables above, seed services and future slots, then switch the browser's local storage calls to server requests.
-3. **Reliable booking.** Add server-side slot reservation, cancellation, and rescheduling; test capacity and prevent duplicate bookings.
-4. **Confirmation.** For a project demo, keep the on-screen reference. If your course permits external services, add email confirmation through a server-side function.
-5. **AI assistant.** Start with a small FAQ grounded only in approved service descriptions and requirements. Add a server-side model call later, pass only the relevant service text, and tell the assistant to say when it does not know. Do not let the assistant create or change bookings; use the explicit booking form for that.
+### 1. Citizen / Customer Portal (index.html)
+- **Interactive Catalogue**: Explore 6 civic departments with document checklists and estimated consultation durations.
+- **Dynamic Slot Availability**: Real-time slot checking reflecting booked slots and officer administrative blocks.
+- **Appointment Management**: Book, reschedule, and cancel bookings with unique reference codes (CE-XXXXXX).
+- **Autonomous Citizen AI Agent**:
+  - Powered by Groq LLM with function calling.
+  - Can answer questions about documents and policies.
+  - **Takes autonomous actions**:
+    - check_slot_availability
+    - book_appointment
+    - lookup_booking
+    - reschedule_appointment
+    - cancel_appointment
+  - Renders execution badges (e.g. `[Action] Autonomous Tool: book_appointment`) showing real agentic actions.
 
-## Suggested presentation demo
+### 2. Retailer / Officer Operations Portal (retailer.html)
+- **Operations Dashboard**: Real-time KPI summary (Total Bookings, Active Visits, Cancelled Slots, Blocked Slots).
+- **Live Citizen Schedule**: Searchable, filterable appointments table with administrative cancel & reschedule controls.
+- **Slot Capacity & Blocking Matrix**: Interactive matrix allowing the officer to block or unblock slots for staff training, lunch, or maintenance with a single click.
+- **Operations Co-Pilot AI Agent**:
+  - Officer-specific assistant with administrative tool execution:
+    - get_daily_schedule
+    - get_all_appointments
+    - block_or_unblock_slot
+    - reschedule_citizen_booking
+    - cancel_citizen_booking
+    - get_center_analytics
+  - Automatically updates the live UI whenever the officer agent executes state-altering commands!
 
-Search for “documents,” open Document services, show its checklist, book a time, then open My appointments and reschedule or cancel it. Ask the assistant “What should I bring?” to show the FAQ flow.
+---
+
+## How to Run Locally
+
+### 1. Requirements
+- Node.js (v18+)
+
+### 2. Configure Environment (.env)
+Create or edit `.env` in the root directory:
+```env
+PORT=3000
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=openai/gpt-oss-120b
+```
+
+### 3. Start the Server
+```bash
+npm start
+```
+Then open:
+- **Customer Portal**: `http://localhost:3000/index.html`
+- **Retailer / Operations Portal**: `http://localhost:3000/retailer.html`
+
+---
+
+## Agentic AI Course Demonstration Guide
+
+1. **Citizen Autonomous Booking**:
+   - Open the Citizen AI assistant and type:
+     > *"Book an appointment for Document Services tomorrow at 10:00 AM for Rahul, rahul@gmail.com"*
+   - Watch the agent execute `book_appointment`, record the slot in `store.json`, and return reference details and checklists.
+2. **Operations Dashboard & Schedule Inspection**:
+   - Navigate to the **Officer / Retailer Portal** (`retailer.html`).
+   - Notice Rahul's booking automatically appear in the schedule table.
+3. **Autonomous Slot Blocking**:
+   - Open the Operations AI Co-Pilot in the Retailer view and command:
+     > *"Block the 1:30 PM slot for Document Services tomorrow for staff training"*
+   - The agent calls `block_or_unblock_slot`, blocking the slot in real time.
+4. **Operations Analytics Briefing**:
+   - Ask the Operations Agent:
+     > *"Give me an operational summary of our appointments and center analytics"*
+   - The agent executes `get_center_analytics` and `get_daily_schedule` and generates an executive report with recommendations.
