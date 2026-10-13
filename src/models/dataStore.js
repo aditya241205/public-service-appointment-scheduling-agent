@@ -100,6 +100,10 @@ class DataStore {
     this.services = INITIAL_SERVICES;
     this.bookings = [];
     this.blockedSlots = [];
+    this.users = [
+      { id: 'usr-1', name: 'Officer Sharma', email: 'officer@civicease.gov', password: 'admin123', role: 'officer' },
+      { id: 'usr-2', name: 'Rahul Verma', email: 'rahul@gmail.com', password: 'password123', role: 'citizen' }
+    ];
     this.load();
   }
 
@@ -116,6 +120,10 @@ class DataStore {
         this.services = data.services || INITIAL_SERVICES;
         this.bookings = data.bookings || [];
         this.blockedSlots = data.blockedSlots || [];
+        this.users = data.users || [
+          { id: 'usr-1', name: 'Officer Sharma', email: 'officer@civicease.gov', password: 'admin123', role: 'officer' },
+          { id: 'usr-2', name: 'Rahul Verma', email: 'rahul@gmail.com', password: 'password123', role: 'citizen' }
+        ];
       } else {
         const today = new Date();
         const tomorrow = new Date(today);
@@ -182,7 +190,8 @@ class DataStore {
       const data = {
         services: this.services,
         bookings: this.bookings,
-        blockedSlots: this.blockedSlots
+        blockedSlots: this.blockedSlots,
+        users: this.users
       };
       const dir = path.dirname(config.dataPath);
       if (!fs.existsSync(dir)) {
@@ -190,9 +199,34 @@ class DataStore {
       }
       fs.writeFileSync(config.dataPath, JSON.stringify(data, null, 2), 'utf8');
     } catch (err) {
-      // Gracefully fall back to in-memory state on read-only serverless filesystems
       console.warn('DataStore save warning (fallback to in-memory):', err.message);
     }
+  }
+
+  findUserByEmail(email) {
+    if (!email) return null;
+    return this.users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+  }
+
+  createUser({ name, email, password, role = 'citizen' }) {
+    if (!name || !email || !password) {
+      throw new Error('Name, email, and password are required.');
+    }
+    const existing = this.findUserByEmail(email);
+    if (existing) {
+      throw new Error('An account with this email already exists.');
+    }
+    const newUser = {
+      id: `usr-${Date.now()}`,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      role: role === 'officer' ? 'officer' : 'citizen',
+      created_at: new Date().toISOString()
+    };
+    this.users.push(newUser);
+    this.save();
+    return newUser;
   }
 
   getServices() {

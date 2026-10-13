@@ -1,4 +1,97 @@
-let services = [];
+const FALLBACK_SERVICES = [
+  {
+    id: 'documents',
+    icon: 'DOC',
+    name: 'Document Services',
+    short: 'Apply for or renew identity documents, certificates, and affidavits.',
+    duration: 'About 20 minutes',
+    description: 'Get help with government identity documents, citizenship proofs, and official certificates at your local service centre.',
+    requirements: [
+      'A valid government photo ID (Aadhaar / Voter ID / Passport)',
+      'Completed application form',
+      'Original supporting documents and photocopies',
+      'Two recent passport-size photographs'
+    ],
+    slots: ['9:00 AM', '10:00 AM', '11:00 AM', '11:45 AM', '1:30 PM', '2:30 PM', '3:30 PM']
+  },
+  {
+    id: 'permits',
+    icon: 'LIC',
+    name: 'Permits and Licences',
+    short: 'Guidance and processing for municipal permits, trade licences, and approvals.',
+    duration: 'About 30 minutes',
+    description: 'Speak with a municipal service officer about residential approvals, trade licences, vehicle endorsements, and building clearances.',
+    requirements: [
+      'Applicant Photo ID',
+      'Application reference number (if submitted online)',
+      'Site plan / Property tax receipt or deed',
+      'No Objection Certificate (NOC) if applicable'
+    ],
+    slots: ['9:30 AM', '10:30 AM', '11:30 AM', '1:30 PM', '2:45 PM', '3:45 PM']
+  },
+  {
+    id: 'tax',
+    icon: 'TAX',
+    name: 'Tax Assistance',
+    short: 'Help with property tax assessment, municipal dues, and revenue forms.',
+    duration: 'About 25 minutes',
+    description: 'An officer will guide you through municipal assessment, property tax payment records, challan generation, and dispute resolution.',
+    requirements: [
+      'Government Photo ID',
+      'Property assessment number / Unique property ID',
+      'Previous tax payment receipts or demand notice',
+      'Bank passbook copy if requesting refund or reconciliation'
+    ],
+    slots: ['9:00 AM', '10:15 AM', '11:00 AM', '12:30 PM', '2:00 PM', '3:15 PM']
+  },
+  {
+    id: 'housing',
+    icon: 'HSG',
+    name: 'Housing Support',
+    short: 'Assistance with public housing schemes, allotments, and tenant support.',
+    duration: 'About 30 minutes',
+    description: 'Consult with civic housing counsellors on public housing allotments, registry verifications, and welfare housing schemes.',
+    requirements: [
+      'Income certificate / proof of household income',
+      'Proof of current residence (rent agreement / electricity bill)',
+      'Aadhaar cards of all family members',
+      'Application scheme reference number'
+    ],
+    slots: ['9:15 AM', '10:45 AM', '11:30 AM', '1:00 PM', '2:15 PM', '3:45 PM']
+  },
+  {
+    id: 'business',
+    icon: 'BIZ',
+    name: 'Small Business Help',
+    short: 'Registration guidance, MSME certification, and local vendor permits.',
+    duration: 'About 30 minutes',
+    description: 'One-stop facilitation for micro and small enterprises seeking local trade licensing, vendor stands, or MSME registration guidance.',
+    requirements: [
+      'Business Owner Photo ID and PAN card',
+      'Business address proof / Rental lease',
+      'GSTIN or MSME Udyam registration (if already initiated)',
+      'Brief outline of business activity'
+    ],
+    slots: ['9:30 AM', '10:30 AM', '12:00 PM', '1:15 PM', '2:45 PM', '3:30 PM']
+  },
+  {
+    id: 'community',
+    icon: 'COM',
+    name: 'Community and Welfare Services',
+    short: 'Pensions, disability support, senior citizen schemes, and welfare benefits.',
+    duration: 'About 20 minutes',
+    description: 'Enrol or verify eligibility for social welfare schemes including senior citizen pensions, disability pensions, and student subsidies.',
+    requirements: [
+      'Aadhaar card and Age proof',
+      'Disability / Caste / BPL certificate if applicable',
+      'Bank account details (linked with Aadhaar)',
+      '2 Passport size photographs'
+    ],
+    slots: ['9:00 AM', '10:00 AM', '11:15 AM', '1:30 PM', '2:15 PM', '3:00 PM']
+  }
+];
+
+let services = [...FALLBACK_SERVICES];
 let selectedService = null;
 let selectedDate = null;
 let selectedSlot = null;
@@ -56,19 +149,19 @@ async function updateCount() {
   countEl.textContent = refs.length;
 }
 
-// Fetch services from backend
+// Fetch services from backend with instant fallback
 async function fetchServices() {
+  renderServices();
   try {
     const res = await fetch(`${API_BASE}/api/services`);
     const data = await res.json();
-    if (data.success) {
+    if (data.success && Array.isArray(data.services) && data.services.length > 0) {
       services = data.services;
       renderServices();
     }
   } catch (err) {
-    console.error('Failed to load services:', err);
-    byId('noResults').textContent = 'Unable to connect to server. Please ensure backend is running.';
-    byId('noResults').hidden = false;
+    console.warn('Backend services sync deferred; displaying local service catalog:', err);
+    // FALLBACK_SERVICES remain rendered so user is never blocked
   }
 }
 
@@ -171,11 +264,15 @@ async function loadSlotGrid(serviceId, dateYmd) {
 
 function showBookingForm() {
   if (!selectedSlot) return;
+  const loggedUser = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+  const defaultName = loggedUser ? escapeText(loggedUser.name) : '';
+  const defaultEmail = loggedUser ? escapeText(loggedUser.email) : '';
+
   byId('bookingForm').innerHTML = `
     <form id="bookForm" style="margin-top:16px;">
       <div class="form-grid">
-        <label>Your Name<input name="name" required placeholder="Full Name (e.g. John Doe)" maxlength="60"></label>
-        <label>Email Address<input name="email" type="email" required placeholder="you@example.com"></label>
+        <label>Your Name<input name="name" required placeholder="Full Name (e.g. John Doe)" maxlength="60" value="${defaultName}"></label>
+        <label>Email Address<input name="email" type="email" required placeholder="you@example.com" value="${defaultEmail}"></label>
       </div>
       <button class="primary-button modal-action" type="submit">
         ${rescheduleRef ? 'Confirm Reschedule' : 'Confirm Appointment'} <span>-&gt;</span>
@@ -429,9 +526,10 @@ document.addEventListener('DOMContentLoaded', () => {
     byId('chatMessages').scrollTop = byId('chatMessages').scrollHeight;
 
     try {
+      const authHeaders = (typeof getAuthHeaders === 'function') ? getAuthHeaders() : { 'Content-Type': 'application/json' };
       const res = await fetch(`${API_BASE}/api/agent/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({
           mode: 'customer',
           messages: chatHistory

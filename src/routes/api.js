@@ -5,6 +5,13 @@ const serviceController = require('../controllers/serviceController');
 const bookingController = require('../controllers/bookingController');
 const slotController = require('../controllers/slotController');
 const agentController = require('../controllers/agentController');
+const authController = require('../controllers/authController');
+const { authenticateToken } = require('../middleware/authMiddleware');
+
+// Authentication endpoints (JWT)
+router.post('/auth/register', authController.register);
+router.post('/auth/login', authController.login);
+router.get('/auth/me', authenticateToken, authController.getMe);
 
 // Services endpoints
 router.get('/services', serviceController.getAllServices);

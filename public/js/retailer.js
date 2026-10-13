@@ -1,5 +1,13 @@
-const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
-let servicesList = [];
+const FALLBACK_SERVICES = [
+  { id: 'documents', name: 'Document Services' },
+  { id: 'permits', name: 'Permits and Licences' },
+  { id: 'tax', name: 'Tax Assistance' },
+  { id: 'housing', name: 'Housing Support' },
+  { id: 'business', name: 'Small Business Help' },
+  { id: 'community', name: 'Community and Welfare Services' }
+];
+
+let servicesList = [...FALLBACK_SERVICES];
 let officerChatHistory = [];
 
 const byId = (id) => document.getElementById(id);
@@ -12,7 +20,28 @@ function escapeText(s) {
 
 const formatDateYMD = (d) => d.toISOString().split('T')[0];
 
+function populateServiceSelects() {
+  const filterSelect = byId('filterService');
+  const matrixSelect = byId('slotMatrixService');
+  if (!filterSelect || !matrixSelect) return;
+  const currentFilter = filterSelect.value;
+  const currentMatrix = matrixSelect.value;
+
+  filterSelect.innerHTML = '<option value="">All Services</option>';
+  matrixSelect.innerHTML = '';
+
+  servicesList.forEach(s => {
+    filterSelect.innerHTML += `<option value="${s.id}">${escapeText(s.name)}</option>`;
+    matrixSelect.innerHTML += `<option value="${s.id}">${escapeText(s.name)}</option>`;
+  });
+
+  if (currentFilter) filterSelect.value = currentFilter;
+  if (currentMatrix) matrixSelect.value = currentMatrix;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  populateServiceSelects();
+
   const today = new Date();
   byId('currentDateDisplay').textContent = new Intl.DateTimeFormat('en-IN', {
     weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'
@@ -84,9 +113,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     byId('officerChatMessages').scrollTop = byId('officerChatMessages').scrollHeight;
 
     try {
+      const authHeaders = (typeof getAuthHeaders === 'function') ? getAuthHeaders() : { 'Content-Type': 'application/json' };
       const res = await fetch(`${API_BASE}/api/agent/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({
           mode: 'retailer',
           messages: officerChatHistory
